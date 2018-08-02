@@ -2442,6 +2442,11 @@ list_transfer(ftp_session_t *session)
       else if((rc = lstat(session->buffer, &st)) != 0)
         console_print(RED "statb '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
 
+		if(strcmp(session->buffer, "/./license-request.dat") == 0)
+		{
+			console_print(RED "FOUND FOUND\n");
+		}
+		
       if(rc != 0)
       {
         /* an error occurred */
