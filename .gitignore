@@ -1,0 +1,12 @@
+build/*
+build.*
+output/
+ftpd
+*.3dsx
+*.cia
+*.smdh
+*.elf
+*.nso
+*.pfs0
+*.nacp
+*.nro
