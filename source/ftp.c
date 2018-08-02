@@ -2425,7 +2425,7 @@ list_transfer(ftp_session_t *session)
         if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
           console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
         else if((rc = lstat(session->buffer, &st)) != 0)
-          console_print(RED "stat '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
+          console_print(RED "statc '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
 
         if(rc != 0)
         {
@@ -2440,7 +2440,7 @@ list_transfer(ftp_session_t *session)
       if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
         console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
       else if((rc = lstat(session->buffer, &st)) != 0)
-        console_print(RED "stat '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
+        console_print(RED "statb '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
 
       if(rc != 0)
       {
@@ -3254,6 +3254,7 @@ FTP_DECLARE(MLST)
   int         rc;
   char        *path;
   size_t      len;
+  char 		  *filenames;
 
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
@@ -3276,6 +3277,9 @@ FTP_DECLARE(MLST)
 
   /* encode \n in path */
   len = session->buffersize;
+  filenames = session->buffer;
+  ftp_send_response(session, 200, "len\r\n%lu", len);
+  ftp_send_response(session, 200, "names\r\n%s", filenames);
   path = encode_path(session->buffer, &len, true);
   if(!path)
   {
