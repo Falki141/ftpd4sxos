@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: devkitpro/devkita64
+    steps:
+      - checkout
+      - run: sudo apt-get -y install zip
+      - run: make nro
+      - run: mkdir -p switch/ftpd/
+      - run: mkdir zip
+      - run: cp ftpd.nro switch/ftpd/ftpd.nro
+      - run: cp ftpd.nacp switch/ftpd/ftpd.nacp
+      - run: zip -r zip/ftpd_${CIRCLE_BUILD_NUM}.zip switch
+      - store_artifacts:
+          path: zip/
