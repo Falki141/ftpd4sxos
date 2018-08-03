@@ -2437,22 +2437,26 @@ list_transfer(ftp_session_t *session)
       }
 #else
       /* lstat the entry */
-      if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
-        console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
-      else if((rc = lstat(session->buffer, &st)) != 0)
-        console_print(RED "statb '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
-
+		if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
+			console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
+		
 		if(strcmp(session->buffer, "/./license-request.dat") == 0)
 		{
-			console_print(RED "FOUND FOUND\n");
+			console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
+			rc = 0;
+		}
+		else
+		{
+		if((rc = lstat(session->buffer, &st)) != 0)
+			console_print(RED "statb '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));			
 		}
 		
       if(rc != 0)
       {
         /* an error occurred */
-        //ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-        //ftp_send_response(session, 550, "unavailable\r\n");
-        //return LOOP_EXIT;
+        ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
+        ftp_send_response(session, 550, "unavailable\r\n");
+        return LOOP_EXIT;
       }
 #endif
       /* encode \n in path */
