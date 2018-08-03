@@ -2430,9 +2430,9 @@ list_transfer(ftp_session_t *session)
         if(rc != 0)
         {
           /* an error occurred */
-          //ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-          //ftp_send_response(session, 550, "unavailable\r\n");
-          //return LOOP_EXIT;
+          ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
+          ftp_send_response(session, 550, "unavailable\r\n");
+          return LOOP_EXIT;
         }
       }
 #else
@@ -2834,9 +2834,9 @@ ftp_xfer_dir(ftp_session_t   *session,
   else if(ftp_session_open_cwd(session) != 0)
   {
     /* no argument, but opening cwd failed */
-    //ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-    //ftp_send_response(session, 550, "%s\r\n", strerror(errno));
-    //return;
+    ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
+    ftp_send_response(session, 550, "%s\r\n", strerror(errno));
+    return;
   }
   else
   {
@@ -2851,9 +2851,9 @@ ftp_xfer_dir(ftp_session_t   *session,
       rc = ftp_session_fill_dirent_cdir(session, session->lwd);
       if(rc != 0)
       {
-        //ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-        //ftp_send_response(session, 550, "%s\r\n", strerror(rc));
-       // return;
+        ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
+        ftp_send_response(session, 550, "%s\r\n", strerror(rc));
+        return;
       }
     }
   }
@@ -3011,9 +3011,9 @@ FTP_DECLARE(CWD)
   rc = stat(session->buffer, &st);
   if(rc != 0)
   {
-    //console_print(RED "stat '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
-    //ftp_send_response(session, 550, "unavailable\r\n");
-    //return;
+    console_print(RED "stat '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
+    ftp_send_response(session, 550, "unavailable\r\n");
+    return;
   }
 
   /* make sure it is a directory */
@@ -3167,16 +3167,16 @@ FTP_DECLARE(MDTM)
   rc = sdmc_getmtime(session->buffer, &mtime);
   if(rc != 0)
   {
-    //ftp_send_response(session, 550, "Error getting mtime\r\n");
-    //return;
+    ftp_send_response(session, 550, "Error getting mtime\r\n");
+    return;
   }
   t_mtime = mtime;
 #else
   rc = stat(session->buffer, &st);
   if(rc != 0)
   {
-   // ftp_send_response(session, 550, "Error getting mtime\r\n");
-   // return;
+    ftp_send_response(session, 550, "Error getting mtime\r\n");
+    return;
   }
   t_mtime = st.st_mtime;
 #endif
@@ -3184,15 +3184,15 @@ FTP_DECLARE(MDTM)
   tm = gmtime(&t_mtime);
   if(tm == NULL)
   {
-    //ftp_send_response(session, 550, "Error getting mtime\r\n");
-   // return;
+    ftp_send_response(session, 550, "Error getting mtime\r\n");
+    return;
   }
 
   session->buffersize = strftime(session->buffer, sizeof(session->buffer), "%Y%m%d%H%M%S", tm);
   if(session->buffersize == 0)
   {
-    //ftp_send_response(session, 550, "Error getting mtime\r\n");
-    //return;
+    ftp_send_response(session, 550, "Error getting mtime\r\n");
+    return;
   }
 
   session->buffer[session->buffersize] = 0;
@@ -3280,8 +3280,8 @@ FTP_DECLARE(MLST)
   rc = lstat(session->buffer, &st);
   if(rc != 0)
   {
-    //ftp_send_response(session, 550, "%s\r\n", strerror(errno));
-   // return;
+    ftp_send_response(session, 550, "bla%s\r\n", strerror(errno));
+    return;
   }
 
   /* encode \n in path */
@@ -3292,8 +3292,8 @@ FTP_DECLARE(MLST)
   path = encode_path(session->buffer, &len, true);
   if(!path)
   {
-    //ftp_send_response(session, 550, "%s\r\n", strerror(ENOMEM));
-    //return;
+    ftp_send_response(session, 550, "%s\r\n", strerror(ENOMEM));
+    return;
   }
 
   session->dir_mode = XFER_DIR_MLST;
@@ -3301,15 +3301,15 @@ FTP_DECLARE(MLST)
   free(path);
   if(rc != 0)
   {
-    //ftp_send_response(session, 550, "%s\r\n", strerror(errno));
-    //return;
+    ftp_send_response(session, 550, "%s\r\n", strerror(errno));
+    return;
   }
 
   path = malloc(session->buffersize + 1);
   if(!path)
   {
-   // ftp_send_response(session, 550, "%s\r\n", strerror(ENOMEM));
-   // return;
+   ftp_send_response(session, 550, "%s\r\n", strerror(ENOMEM));
+   return;
   }
 
   memcpy(path, session->buffer, session->buffersize);
