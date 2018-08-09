@@ -1800,7 +1800,10 @@ update_free_space(void)
 	
 	if(sessions && sessions->was_set)
 	{
-		sleep(1);
+		 struct timespec ts;
+		ts.tv_sec = 0;
+    ts.tv_nsec = 100000000; // 0,1 secounds
+	nanosleep(&ts, NULL);
 		//update_bar_space(sessions->save_free);
 			//  console_print(RED "SESSION SAVE THIS");
 	}
