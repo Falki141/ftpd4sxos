@@ -28,6 +28,7 @@
 #define lstat stat
 #elif defined(__SWITCH__)
 #include <switch.h>
+#include "types.h"
 #define lstat stat
 #else
 #include <stdbool.h>
@@ -175,6 +176,8 @@ struct ftp_session_t
   uint64_t filesize;                     /*! persistent file size between callbacks */
   FILE     *fp;                          /*! persistent open file pointer between callbacks */
   DIR      *dp;                          /*! persistent open directory pointer between callbacks */
+  double save_free;
+  int was_set;
 };
 
 /*! ftp command descriptor */
@@ -447,11 +450,11 @@ ftp_session_close_pasv(ftp_session_t *session)
   /* close pasv socket */
   if(session->pasv_fd >= 0)
   {
-    console_print(YELLOW "stop listening on %s:%u\n" RESET,
+    console_print(YELLOW "stop 11 listening on %s:%u\n" RESET,
                   inet_ntoa(session->pasv_addr.sin_addr),
                   ntohs(session->pasv_addr.sin_port));
 
-    ftp_closesocket(session->pasv_fd, false);
+    //ftp_closesocket(session->pasv_fd, false);
   }
 
   session->pasv_fd = -1;
@@ -559,7 +562,7 @@ ftp_session_read_file(ftp_session_t *session)
   if(rc < 0)
   {
     console_print(RED "fread: %d %s\n" RESET, errno, strerror(errno));
-    //return -1;
+    return -1;
   }
 
   /* adjust file position */
@@ -577,6 +580,7 @@ ftp_session_read_file(ftp_session_t *session)
  *
  *  @note truncates file
  */
+ // @todo her are the bug, the writing its so and the mermory have an overflow...
 static int
 ftp_session_open_file_write(ftp_session_t *session,
                             bool          append)
@@ -1762,19 +1766,54 @@ update_free_space(void)
 #define KiB (1024.0)
 #define MiB (1024.0*KiB)
 #define GiB (1024.0*MiB)
-  char           buffer[16];
   struct statvfs st;
   double         bytes_free;
-  int            rc, len;
+  int            rc;
 
-  rc = statvfs("sdmc:/", &st);
+  rc = 0;
+  if(!sessions)
+  {
+   rc = statvfs("sdmc:/", &st);
+  }
+  
   if(rc != 0)
     console_print(RED "statvfs: %d %s\n" RESET, errno, strerror(errno));
   else
   {
-    bytes_free = (double)st.f_bsize * st.f_bfree;
-
-    if     (bytes_free < 1000.0)
+	
+	if(!sessions)
+	{
+      bytes_free = (double)st.f_bsize * st.f_bfree;
+	  update_bar_space(bytes_free);
+	}
+	
+	//caching because memory buffer...
+	if(sessions && !sessions->was_set)
+    {
+		rc = statvfs("sdmc:/", &st);
+		bytes_free = (double)st.f_bsize * st.f_bfree;
+	  sessions->save_free = bytes_free;
+	  sessions->was_set = 1;
+	  update_bar_space(bytes_free);
+	  console_print(RED "SAVE THIS!");
+    }
+	
+	if(sessions && sessions->was_set)
+	{
+		sleep(1);
+		//update_bar_space(sessions->save_free);
+			//  console_print(RED "SESSION SAVE THIS");
+	}
+    //console_print(GREEN "free space %d", len);
+  }
+#endif
+}
+ 
+update_bar_space(double bytes_free)
+{
+	char           buffer[16];
+	int            len;
+	if     (bytes_free < 1000.0)
       len = snprintf(buffer, sizeof(buffer), "%.0lfB", bytes_free);
     else if(bytes_free < 10.0*KiB)
       len = snprintf(buffer, sizeof(buffer), "%.2lfKiB", floor((bytes_free*100.0)/KiB)/100.0);
@@ -1794,10 +1833,7 @@ update_free_space(void)
       len = snprintf(buffer, sizeof(buffer), "%.1lfGiB", floor((bytes_free*10.0)/GiB)/10.0);
     else
       len = snprintf(buffer, sizeof(buffer), "%.0lfGiB", floor(bytes_free/GiB));
-
-    console_set_status("\x1b[0;%dH" GREEN "%s", 50-len, buffer);
-  }
-#endif
+  console_set_status("\x1b[0;%dH" GREEN "%s", 50-len, buffer);
 }
 
 /*! Update status bar */
@@ -2443,6 +2479,7 @@ list_transfer(ftp_session_t *session)
 		if(strcmp(session->buffer, "/./license-request.dat") == 0)
 		{
 			console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
+			update_free_space();
 			rc = 0;
 		}
 		else
@@ -2732,9 +2769,9 @@ ftp_xfer_dir(ftp_session_t   *session,
     if(build_path(session, session->cwd, args) != 0)
     {
       /* error building path */
-      //ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-      //ftp_send_response(session, 550, "%s\r\n", strerror(errno));
-     // return;
+      ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
+      ftp_send_response(session, 550, "%s\r\n", strerror(errno));
+      return;
     }
 
     /* check if this is a directory */
@@ -2805,9 +2842,9 @@ ftp_xfer_dir(ftp_session_t   *session,
 
       if(rc != 0)
       {
-        //ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-        //ftp_send_response(session, 550, "%s\r\n", strerror(rc));
-        //return;
+        ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
+        ftp_send_response(session, 550, "%s\r\n", strerror(rc));
+        return;
       }
     }
     else

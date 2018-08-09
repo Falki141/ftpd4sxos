@@ -34,7 +34,7 @@ APP_AUTHOR	:=	Mtheall, Tuxsh, WinterMute
 ICON 	:= meta/ftpd.jpg
 APP_VERSION	:=	$(VERSION)
 #---------------------------------------------------------------------------------
-TARGET		:=	ftpd
+TARGET		:=	ftpdtest2
 BUILD		:=	build.switch
 SOURCES		:=	source
 DATA		:=	data
