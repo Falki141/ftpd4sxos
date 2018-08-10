@@ -28,7 +28,6 @@
 #define lstat stat
 #elif defined(__SWITCH__)
 #include <switch.h>
-#include "types.h"
 #define lstat stat
 #else
 #include <stdbool.h>
@@ -176,8 +175,6 @@ struct ftp_session_t
   uint64_t filesize;                     /*! persistent file size between callbacks */
   FILE     *fp;                          /*! persistent open file pointer between callbacks */
   DIR      *dp;                          /*! persistent open directory pointer between callbacks */
-  double save_free;
-  int was_set;
 };
 
 /*! ftp command descriptor */
@@ -450,11 +447,11 @@ ftp_session_close_pasv(ftp_session_t *session)
   /* close pasv socket */
   if(session->pasv_fd >= 0)
   {
-    console_print(YELLOW "stop 11 listening on %s:%u\n" RESET,
+    console_print(YELLOW "stop listening on %s:%u\n" RESET,
                   inet_ntoa(session->pasv_addr.sin_addr),
                   ntohs(session->pasv_addr.sin_port));
 
-    //ftp_closesocket(session->pasv_fd, false);
+    ftp_closesocket(session->pasv_fd, false);
   }
 
   session->pasv_fd = -1;
@@ -568,7 +565,7 @@ ftp_session_read_file(ftp_session_t *session)
   /* adjust file position */
   session->filepos += rc;
 
-  return 0;
+  return rc;
 }
 
 /*! open file for writing for ftp session
@@ -580,7 +577,6 @@ ftp_session_read_file(ftp_session_t *session)
  *
  *  @note truncates file
  */
- // @todo her are the bug, the writing its so and the mermory have an overflow...
 static int
 ftp_session_open_file_write(ftp_session_t *session,
                             bool          append)
@@ -1766,57 +1762,19 @@ update_free_space(void)
 #define KiB (1024.0)
 #define MiB (1024.0*KiB)
 #define GiB (1024.0*MiB)
+  char           buffer[16];
   struct statvfs st;
   double         bytes_free;
-  int            rc;
+  int            rc, len;
 
-  rc = 0;
-  if(!sessions)
-  {
-   rc = statvfs("sdmc:/", &st);
-  }
-  
+  rc = statvfs("sdmc:/", &st);
   if(rc != 0)
     console_print(RED "statvfs: %d %s\n" RESET, errno, strerror(errno));
   else
   {
-	
-	if(!sessions)
-	{
-      bytes_free = (double)st.f_bsize * st.f_bfree;
-	  update_bar_space(bytes_free);
-	}
-	
-	//caching because memory buffer...
-	if(sessions && !sessions->was_set)
-    {
-		rc = statvfs("sdmc:/", &st);
-		bytes_free = (double)st.f_bsize * st.f_bfree;
-	  sessions->save_free = bytes_free;
-	  sessions->was_set = 1;
-	  update_bar_space(bytes_free);
-	  console_print(RED "SAVE THIS!");
-    }
-	
-	if(sessions && sessions->was_set)
-	{
-		 struct timespec ts;
-		ts.tv_sec = 0;
-    ts.tv_nsec = 100000000; // 0,1 secounds
-	nanosleep(&ts, NULL);
-		//update_bar_space(sessions->save_free);
-			//  console_print(RED "SESSION SAVE THIS");
-	}
-    //console_print(GREEN "free space %d", len);
-  }
-#endif
-}
- 
-update_bar_space(double bytes_free)
-{
-	char           buffer[16];
-	int            len;
-	if     (bytes_free < 1000.0)
+    bytes_free = (double)st.f_bsize * st.f_bfree;
+
+    if     (bytes_free < 1000.0)
       len = snprintf(buffer, sizeof(buffer), "%.0lfB", bytes_free);
     else if(bytes_free < 10.0*KiB)
       len = snprintf(buffer, sizeof(buffer), "%.2lfKiB", floor((bytes_free*100.0)/KiB)/100.0);
@@ -1836,7 +1794,10 @@ update_bar_space(double bytes_free)
       len = snprintf(buffer, sizeof(buffer), "%.1lfGiB", floor((bytes_free*10.0)/GiB)/10.0);
     else
       len = snprintf(buffer, sizeof(buffer), "%.0lfGiB", floor(bytes_free/GiB));
-  console_set_status("\x1b[0;%dH" GREEN "%s", 50-len, buffer);
+
+    console_set_status("\x1b[0;%dH" GREEN "%s", 50-len, buffer);
+  }
+#endif
 }
 
 /*! Update status bar */
@@ -2464,7 +2425,7 @@ list_transfer(ftp_session_t *session)
         if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
           console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
         else if((rc = lstat(session->buffer, &st)) != 0)
-          console_print(RED "statc '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
+          console_print(RED "stat '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
 
         if(rc != 0)
         {
@@ -2476,21 +2437,20 @@ list_transfer(ftp_session_t *session)
       }
 #else
       /* lstat the entry */
-		if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
-			console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
-		
-		if(strcmp(session->buffer, "/./license-request.dat") == 0)
-		{
-			console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
-			update_free_space();
-			rc = 0;
-		}
-		else
-		{
-		if((rc = lstat(session->buffer, &st)) != 0)
-			console_print(RED "statb '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));			
-		}
-		
+      if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
+        console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
+     
+     		if(strcmp(session->buffer, "/./license-request.dat") == 0)
+        {
+          console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
+          rc = 0;
+        }
+        else
+        {
+        if((rc = lstat(session->buffer, &st)) != 0)
+          console_print(RED "statb '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));			
+        }
+
       if(rc != 0)
       {
         /* an error occurred */
@@ -2576,8 +2536,10 @@ retrieve_transfer(ftp_session_t *session)
   }
 
   /* send any pending data */
+  size_t send_size = session->buffersize - session->bufferpos;
+  if (send_size > 0x1000) send_size = 0x1000;
   rc = send(session->data_fd, session->buffer + session->bufferpos,
-            session->buffersize - session->bufferpos, 0);
+            send_size, 0);
   if(rc <= 0)
   {
     /* error sending data */
@@ -3096,9 +3058,9 @@ FTP_DECLARE(DELE)
   if(rc != 0)
   {
     /* error unlinking the file */
-    //console_print(RED "unlink: %d %s\n" RESET, errno, strerror(errno));
-    //ftp_send_response(session, 550, "failed to delete file\r\n");
-    //return;
+    console_print(RED "unlink: %d %s\n" RESET, errno, strerror(errno));
+    ftp_send_response(session, 550, "failed to delete file\r\n");
+    return;
   }
 
   update_free_space();
@@ -3303,7 +3265,6 @@ FTP_DECLARE(MLST)
   int         rc;
   char        *path;
   size_t      len;
-  char 		  *filenames;
 
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
@@ -3320,15 +3281,12 @@ FTP_DECLARE(MLST)
   rc = lstat(session->buffer, &st);
   if(rc != 0)
   {
-    ftp_send_response(session, 550, "bla%s\r\n", strerror(errno));
+    ftp_send_response(session, 550, "%s\r\n", strerror(errno));
     return;
   }
 
   /* encode \n in path */
   len = session->buffersize;
-  filenames = session->buffer;
-  ftp_send_response(session, 200, "len\r\n%lu", len);
-  ftp_send_response(session, 200, "names\r\n%s", filenames);
   path = encode_path(session->buffer, &len, true);
   if(!path)
   {
@@ -3348,8 +3306,8 @@ FTP_DECLARE(MLST)
   path = malloc(session->buffersize + 1);
   if(!path)
   {
-   ftp_send_response(session, 550, "%s\r\n", strerror(ENOMEM));
-   return;
+    ftp_send_response(session, 550, "%s\r\n", strerror(ENOMEM));
+    return;
   }
 
   memcpy(path, session->buffer, session->buffersize);
@@ -3920,17 +3878,14 @@ FTP_DECLARE(RNFR)
   }
 
   /* make sure the path exists */
-  //test
   rc = lstat(session->buffer, &st);
   if(rc != 0)
   {
-	  //console_print(RED "lNERV: %d %s\n" RESET, __func__, args ? args : "");
     /* error getting path status */
-   // console_print(RED "lstat: %d %s\n" RESET, errno, strerror(errno));
-   // ftp_send_response(session, 450, "no such file or directory\r\n");
-  //  return;
+    console_print(RED "lstat: %d %s\n" RESET, errno, strerror(errno));
+    ftp_send_response(session, 450, "no such file or directory\r\n");
+    return;
   }
-
 
   /* we are ready for RNTO */
   session->flags |= SESSION_RENAME;

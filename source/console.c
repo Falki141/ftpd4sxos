@@ -222,6 +222,9 @@ console_render(void)
   gspWaitForVBlank();
 #endif
   gfxSwapBuffers();
+#if defined(__SWITCH__)
+  gfxWaitForVsync();
+#endif
 }
 
 
