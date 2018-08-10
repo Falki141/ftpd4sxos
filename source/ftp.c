@@ -559,13 +559,13 @@ ftp_session_read_file(ftp_session_t *session)
   if(rc < 0)
   {
     console_print(RED "fread: %d %s\n" RESET, errno, strerror(errno));
-    //return -1;
+    return -1;
   }
 
   /* adjust file position */
   session->filepos += rc;
 
-  return 0;
+  return rc;
 }
 
 /*! open file for writing for ftp session
@@ -2425,7 +2425,7 @@ list_transfer(ftp_session_t *session)
         if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
           console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
         else if((rc = lstat(session->buffer, &st)) != 0)
-          console_print(RED "statc '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
+          console_print(RED "stat '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));
 
         if(rc != 0)
         {
@@ -2437,20 +2437,20 @@ list_transfer(ftp_session_t *session)
       }
 #else
       /* lstat the entry */
-		if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
-			console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
-		
-		if(strcmp(session->buffer, "/./license-request.dat") == 0)
-		{
-			console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
-			rc = 0;
-		}
-		else
-		{
-		if((rc = lstat(session->buffer, &st)) != 0)
-			console_print(RED "statb '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));			
-		}
-		
+      if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
+        console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
+     
+     		if(strcmp(session->buffer, "/./license-request.dat") == 0)
+        {
+          console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
+          rc = 0;
+        }
+        else
+        {
+        if((rc = lstat(session->buffer, &st)) != 0)
+          console_print(RED "statb '%s': %d %s\n" RESET, session->buffer, errno, strerror(errno));			
+        }
+
       if(rc != 0)
       {
         /* an error occurred */
@@ -2536,8 +2536,10 @@ retrieve_transfer(ftp_session_t *session)
   }
 
   /* send any pending data */
+  size_t send_size = session->buffersize - session->bufferpos;
+  if (send_size > 0x1000) send_size = 0x1000;
   rc = send(session->data_fd, session->buffer + session->bufferpos,
-            session->buffersize - session->bufferpos, 0);
+            send_size, 0);
   if(rc <= 0)
   {
     /* error sending data */
@@ -2732,9 +2734,9 @@ ftp_xfer_dir(ftp_session_t   *session,
     if(build_path(session, session->cwd, args) != 0)
     {
       /* error building path */
-      //ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-      //ftp_send_response(session, 550, "%s\r\n", strerror(errno));
-     // return;
+      ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
+      ftp_send_response(session, 550, "%s\r\n", strerror(errno));
+      return;
     }
 
     /* check if this is a directory */
@@ -2805,9 +2807,9 @@ ftp_xfer_dir(ftp_session_t   *session,
 
       if(rc != 0)
       {
-        //ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-        //ftp_send_response(session, 550, "%s\r\n", strerror(rc));
-        //return;
+        ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
+        ftp_send_response(session, 550, "%s\r\n", strerror(rc));
+        return;
       }
     }
     else
@@ -3056,9 +3058,9 @@ FTP_DECLARE(DELE)
   if(rc != 0)
   {
     /* error unlinking the file */
-    //console_print(RED "unlink: %d %s\n" RESET, errno, strerror(errno));
-    //ftp_send_response(session, 550, "failed to delete file\r\n");
-    //return;
+    console_print(RED "unlink: %d %s\n" RESET, errno, strerror(errno));
+    ftp_send_response(session, 550, "failed to delete file\r\n");
+    return;
   }
 
   update_free_space();
@@ -3263,7 +3265,6 @@ FTP_DECLARE(MLST)
   int         rc;
   char        *path;
   size_t      len;
-  char 		  *filenames;
 
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
@@ -3280,15 +3281,12 @@ FTP_DECLARE(MLST)
   rc = lstat(session->buffer, &st);
   if(rc != 0)
   {
-    ftp_send_response(session, 550, "bla%s\r\n", strerror(errno));
+    ftp_send_response(session, 550, "%s\r\n", strerror(errno));
     return;
   }
 
   /* encode \n in path */
   len = session->buffersize;
-  filenames = session->buffer;
-  ftp_send_response(session, 200, "len\r\n%lu", len);
-  ftp_send_response(session, 200, "names\r\n%s", filenames);
   path = encode_path(session->buffer, &len, true);
   if(!path)
   {
@@ -3308,8 +3306,8 @@ FTP_DECLARE(MLST)
   path = malloc(session->buffersize + 1);
   if(!path)
   {
-   ftp_send_response(session, 550, "%s\r\n", strerror(ENOMEM));
-   return;
+    ftp_send_response(session, 550, "%s\r\n", strerror(ENOMEM));
+    return;
   }
 
   memcpy(path, session->buffer, session->buffersize);
@@ -3880,17 +3878,14 @@ FTP_DECLARE(RNFR)
   }
 
   /* make sure the path exists */
-  //test
   rc = lstat(session->buffer, &st);
   if(rc != 0)
   {
-	  //console_print(RED "lNERV: %d %s\n" RESET, __func__, args ? args : "");
     /* error getting path status */
-   // console_print(RED "lstat: %d %s\n" RESET, errno, strerror(errno));
-   // ftp_send_response(session, 450, "no such file or directory\r\n");
-  //  return;
+    console_print(RED "lstat: %d %s\n" RESET, errno, strerror(errno));
+    ftp_send_response(session, 450, "no such file or directory\r\n");
+    return;
   }
-
 
   /* we are ready for RNTO */
   session->flags |= SESSION_RENAME;
