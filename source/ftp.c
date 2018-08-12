@@ -2439,8 +2439,9 @@ list_transfer(ftp_session_t *session)
       /* lstat the entry */
       if((rc = build_path(session, session->lwd, dent->d_name)) != 0)
         console_print(RED "build_path: %d %s\n" RESET, errno, strerror(errno));
-     
-     		if(strcmp(session->buffer, "/./license-request.dat") == 0)
+
+        //found sx os license?
+     		if(strcmp(session->buffer, "/./license-request.dat") == 0 || strcmp(session->buffer, "/license-request.dat") == 0)
         {
           console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
           rc = 0;
