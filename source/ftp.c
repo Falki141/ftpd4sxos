@@ -486,7 +486,6 @@ ftp_session_close_file(ftp_session_t *session)
   if(session->fp != NULL)
   {
     rc = fclose(session->fp);
-    ftp_set_current_timestamp(session);
     if(rc != 0)
       console_print(RED "fclose: %d %s\n" RESET, errno, strerror(errno));
   }
@@ -503,17 +502,22 @@ void
 ftp_set_current_timestamp(ftp_session_t *session)
 {
   //int rc;
-  struct stat foo;
-  time_t mtime;
-  struct utimbuf new_times;
+  struct tm * timeinfo;
 
-  stat(session->buffer, &foo);
-  mtime = foo.st_mtime; /* seconds since the epoch */
+time_t now;
+struct timeval tvp[2];
+time(&now);
+tvp[1].tv_sec = now + 100;
 
-  new_times.actime = foo.st_atime; /* keep atime unchanged */
-  new_times.modtime = time(NULL);    /* set mtime to current time */
-  utime(session->buffer, &new_times);
-  console_print(GREEN "File: %s New Time: %s\n", session->buffer, &new_times);
+char t[ 100 ] = "";
+  struct stat b;
+
+  timeinfo = localtime ( &now );
+  utimes(session->buffer, tvp);
+
+  stat(session->buffer, &b);
+  console_print(GREEN "File: %s New Time: %s \n", session->buffer, asctime (timeinfo));
+  console_print(GREEN "LAST MOD %s \n", localtime( &b.st_mtime));
 }
 
 /*! open file for reading for ftp session
@@ -3963,7 +3967,7 @@ FTP_DECLARE(RNTO)
     ftp_send_response(session, 550, "failed to rename file/directory\r\n");
     return;
   }
-
+  ftp_set_current_timestamp(session);
   update_free_space();
   ftp_send_response(session, 250, "OK\r\n");
 }
