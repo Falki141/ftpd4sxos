@@ -23,6 +23,7 @@
 #include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
+#include <utime.h>
 #ifdef _3DS
 #include <3ds.h>
 #define lstat stat
@@ -485,12 +486,34 @@ ftp_session_close_file(ftp_session_t *session)
   if(session->fp != NULL)
   {
     rc = fclose(session->fp);
+    ftp_set_current_timestamp(session);
     if(rc != 0)
       console_print(RED "fclose: %d %s\n" RESET, errno, strerror(errno));
   }
 
   session->fp      = NULL;
   session->filepos = 0;
+}
+
+/*! set correct timestamp for the files
+ *
+ *  @param[in] session ftp session
+ */
+void
+ftp_set_current_timestamp(ftp_session_t *session)
+{
+  //int rc;
+  struct stat foo;
+  time_t mtime;
+  struct utimbuf new_times;
+
+  stat(session->buffer, &foo);
+  mtime = foo.st_mtime; /* seconds since the epoch */
+
+  new_times.actime = foo.st_atime; /* keep atime unchanged */
+  new_times.modtime = time(NULL);    /* set mtime to current time */
+  utime(session->buffer, &new_times);
+  console_print(GREEN "File: %s New Time: %s\n", session->buffer, &new_times);
 }
 
 /*! open file for reading for ftp session
@@ -647,7 +670,7 @@ ftp_session_write_file(ftp_session_t *session)
 
   /* adjust file position */
   session->filepos += rc;
-
+  console_print(GREEN "Write File: %s", session->filepos);
   update_free_space();
   return rc;
 }
@@ -2443,7 +2466,7 @@ list_transfer(ftp_session_t *session)
         //found sx os license?
      		if(strcmp(session->buffer, "/./license-request.dat") == 0 || strcmp(session->buffer, "/license-request.dat") == 0)
         {
-          console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
+          //console_print(GREEN "SX OS LICENSE FOUND - ALL GOOD\n");
           rc = 0;
         }
         else
