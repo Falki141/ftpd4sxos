@@ -23,7 +23,6 @@
 #include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
-#include <utime.h>
 #ifdef _3DS
 #include <3ds.h>
 #define lstat stat
@@ -494,32 +493,6 @@ ftp_session_close_file(ftp_session_t *session)
   session->filepos = 0;
 }
 
-/*! set correct timestamp for the files
- *
- *  @param[in] session ftp session
- */
-void
-ftp_set_current_timestamp(ftp_session_t *session)
-{
-  //int rc;
-  struct tm * timeinfo;
-
-time_t now;
-struct timeval tvp[2];
-time(&now);
-tvp[1].tv_sec = now + 100;
-
-char t[ 100 ] = "";
-  struct stat b;
-
-  timeinfo = localtime ( &now );
-  utimes(session->buffer, tvp);
-
-  stat(session->buffer, &b);
-  console_print(GREEN "File: %s New Time: %s \n", session->buffer, asctime (timeinfo));
-  console_print(GREEN "LAST MOD %s \n", localtime( &b.st_mtime));
-}
-
 /*! open file for reading for ftp session
  *
  *  @param[in] session ftp session
@@ -674,7 +647,7 @@ ftp_session_write_file(ftp_session_t *session)
 
   /* adjust file position */
   session->filepos += rc;
-  console_print(GREEN "Write File: %s", session->filepos);
+
   update_free_space();
   return rc;
 }
@@ -759,6 +732,16 @@ static int
 ftp_session_fill_dirent_type(ftp_session_t *session, const struct stat *st,
                              const char *path, size_t len, const char *type)
 {
+ struct tm * timeinfo;
+ time_t now;
+ time(&now);
+timeinfo = localtime ( &now );
+console_print("TIMENOW: %s \n", asctime (timeinfo));
+
+ struct stat attr;
+    stat(session->buffer, &attr);
+   console_print(RED "FILE2: %s TIME: %s \n", session->buffer, ctime(&attr.st_mtime));
+
   session->buffersize = 0;
 
   if(session->dir_mode == XFER_DIR_MLSD
@@ -807,6 +790,8 @@ ftp_session_fill_dirent_type(ftp_session_t *session, const struct stat *st,
     {
       /* mtime fact */
       struct tm *tm = gmtime(&st->st_mtime);
+      //tm = time(NULL);
+      console_print(GREEN "TEST TIME 1: %s FILE: %s \n", localtime(&tm), session->buffer);
       if(tm == NULL)
         return errno;
 
@@ -911,6 +896,7 @@ ftp_session_fill_dirent_type(ftp_session_t *session, const struct stat *st,
 
     /* timestamp */
     struct tm *tm = gmtime(&st->st_mtime);
+    //console_print(GREEN "TEST TIME 3: %s", tm);
     if(tm)
     {
       const char *fmt = "%b %e %Y ";
@@ -3212,6 +3198,7 @@ FTP_DECLARE(MDTM)
 #endif
 
   tm = gmtime(&t_mtime);
+  //console_print(GREEN "TEST TIME 2: %s", tm);
   if(tm == NULL)
   {
     ftp_send_response(session, 550, "Error getting mtime\r\n");
@@ -3967,7 +3954,7 @@ FTP_DECLARE(RNTO)
     ftp_send_response(session, 550, "failed to rename file/directory\r\n");
     return;
   }
-  ftp_set_current_timestamp(session);
+
   update_free_space();
   ftp_send_response(session, 250, "OK\r\n");
 }
