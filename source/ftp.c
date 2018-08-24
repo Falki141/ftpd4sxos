@@ -738,9 +738,17 @@ ftp_session_fill_dirent_type(ftp_session_t *session, const struct stat *st,
 timeinfo = localtime ( &now );
 console_print("TIMENOW: %s \n", asctime (timeinfo));
 
+int rc2;
+
  struct stat attr;
-    stat(session->buffer, &attr);
-   console_print(RED "FILE2: %s TIME: %s \n", session->buffer, ctime(&attr.st_mtime));
+    rc2 = stat(session->buffer, &attr);
+if(rc2 != 0)
+{
+   console_print(RED "TIMEFAIL: %d %s\n" RESET, errno, strerror(errno));
+}
+else{
+console_print(RED "FILE2: %s TIME: %s \n", session->buffer, ctime(&attr.st_mtime));
+}
 
   session->buffersize = 0;
 
@@ -3954,7 +3962,10 @@ FTP_DECLARE(RNTO)
     ftp_send_response(session, 550, "failed to rename file/directory\r\n");
     return;
   }
-
+  
+struct stat attr;
+    stat(session->buffer, &attr);
+   console_print(RED "FILE33: %s TIME: %s \n", session->buffer, ctime(&attr.st_mtime));
   update_free_space();
   ftp_send_response(session, 250, "OK\r\n");
 }
