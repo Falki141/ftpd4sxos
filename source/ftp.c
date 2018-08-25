@@ -732,24 +732,6 @@ static int
 ftp_session_fill_dirent_type(ftp_session_t *session, const struct stat *st,
                              const char *path, size_t len, const char *type)
 {
- struct tm * timeinfo;
- time_t now;
- time(&now);
-timeinfo = localtime ( &now );
-console_print("TIMENOW: %s \n", asctime (timeinfo));
-
-int rc2;
-
- struct stat attr;
-    rc2 = stat(session->buffer, &attr);
-if(rc2 != 0)
-{
-   console_print(RED "TIMEFAIL: %d %s\n" RESET, errno, strerror(errno));
-}
-else{
-console_print(RED "FILE2: %s TIME: %s \n", session->buffer, ctime(&attr.st_mtime));
-}
-
   session->buffersize = 0;
 
   if(session->dir_mode == XFER_DIR_MLSD
@@ -798,8 +780,6 @@ console_print(RED "FILE2: %s TIME: %s \n", session->buffer, ctime(&attr.st_mtime
     {
       /* mtime fact */
       struct tm *tm = gmtime(&st->st_mtime);
-      //tm = time(NULL);
-      console_print(GREEN "TEST TIME 1: %s FILE: %s \n", localtime(&tm), session->buffer);
       if(tm == NULL)
         return errno;
 
