@@ -388,11 +388,11 @@ ftp_closesocket(int  fd,
     if(rc != 0)
     {
       console_print(RED "getpeername: %d %s\n" RESET, errno, strerror(errno));
-      console_print(YELLOW "closing connection to fd=%d\n" RESET, fd);
+     // console_print(YELLOW "closing connection to fd=%d\n" RESET, fd);
     }
     else
-      console_print(YELLOW "closing connection to %s:%u\n" RESET,
-                    inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+     // console_print(YELLOW "closing connection to %s:%u\n" RESET,
+    //                inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
     /* shutdown connection */
     rc = shutdown(fd, SHUT_WR);
@@ -447,9 +447,9 @@ ftp_session_close_pasv(ftp_session_t *session)
   /* close pasv socket */
   if(session->pasv_fd >= 0)
   {
-    console_print(YELLOW "stop listening on %s:%u\n" RESET,
-                  inet_ntoa(session->pasv_addr.sin_addr),
-                  ntohs(session->pasv_addr.sin_port));
+   // console_print(YELLOW "stop listening on %s:%u\n" RESET,
+   //               inet_ntoa(session->pasv_addr.sin_addr),
+   //               ntohs(session->pasv_addr.sin_port));
 
     ftp_closesocket(session->pasv_fd, false);
   }
@@ -884,7 +884,6 @@ ftp_session_fill_dirent_type(ftp_session_t *session, const struct stat *st,
 
     /* timestamp */
     struct tm *tm = gmtime(&st->st_mtime);
-    //console_print(GREEN "TEST TIME 3: %s", tm);
     if(tm)
     {
       const char *fmt = "%b %e %Y ";
@@ -3186,7 +3185,6 @@ FTP_DECLARE(MDTM)
 #endif
 
   tm = gmtime(&t_mtime);
-  //console_print(GREEN "TEST TIME 2: %s", tm);
   if(tm == NULL)
   {
     ftp_send_response(session, 550, "Error getting mtime\r\n");
