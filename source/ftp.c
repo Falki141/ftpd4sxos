@@ -2909,7 +2909,7 @@ ftp_xfer_dir(ftp_session_t   *session,
  */
 FTP_DECLARE(ABOR)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   if(session->state == COMMAND_STATE)
   {
@@ -2936,7 +2936,7 @@ FTP_DECLARE(ABOR)
  */
 FTP_DECLARE(ALLO)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -2954,7 +2954,7 @@ FTP_DECLARE(ALLO)
  */
 FTP_DECLARE(APPE)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* open the file in append mode */
   ftp_xfer_file(session, args, XFER_FILE_APPE);
@@ -2969,7 +2969,7 @@ FTP_DECLARE(APPE)
  */
 FTP_DECLARE(CDUP)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -2991,7 +2991,7 @@ FTP_DECLARE(CWD)
   struct stat st;
   int         rc;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3077,7 +3077,7 @@ FTP_DECLARE(DELE)
  */
 FTP_DECLARE(FEAT)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3107,7 +3107,7 @@ FTP_DECLARE(FEAT)
  */
 FTP_DECLARE(HELP)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3131,7 +3131,7 @@ FTP_DECLARE(HELP)
  */
 FTP_DECLARE(LIST)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* open the path in LIST mode */
   ftp_xfer_dir(session, args, XFER_DIR_LIST, true);
@@ -3155,7 +3155,7 @@ FTP_DECLARE(MDTM)
   time_t      t_mtime;
   struct tm   *tm;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3213,7 +3213,7 @@ FTP_DECLARE(MKD)
 {
   int rc;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3247,7 +3247,7 @@ FTP_DECLARE(MKD)
  */
 FTP_DECLARE(MLSD)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* open the path in MLSD mode */
   ftp_xfer_dir(session, args, XFER_DIR_MLSD, true);
@@ -3267,7 +3267,7 @@ FTP_DECLARE(MLST)
   char        *path;
   size_t      len;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3326,7 +3326,7 @@ FTP_DECLARE(MLST)
  */
 FTP_DECLARE(MODE)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3366,7 +3366,7 @@ FTP_DECLARE(NLST)
  */
 FTP_DECLARE(NOOP)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* this is a no-op */
   ftp_send_response(session, 200, "OK\r\n");
@@ -3381,7 +3381,7 @@ FTP_DECLARE(NOOP)
  */
 FTP_DECLARE(OPTS)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3456,7 +3456,7 @@ FTP_DECLARE(OPTS)
  */
 FTP_DECLARE(PASS)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* we accept any password */
   ftp_session_set_state(session, COMMAND_STATE, 0);
@@ -3478,7 +3478,7 @@ FTP_DECLARE(PASV)
   char      *p;
   in_port_t port;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   memset(buffer, 0, sizeof(buffer));
 
@@ -3589,7 +3589,7 @@ FTP_DECLARE(PORT)
   unsigned long      val;
   struct sockaddr_in addr;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* reset the state */
   ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
@@ -3696,7 +3696,7 @@ FTP_DECLARE(PWD)
   size_t      len = sizeof(buffer), i;
   char        *path;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3738,7 +3738,7 @@ FTP_DECLARE(PWD)
  */
 FTP_DECLARE(QUIT)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* disconnect from the client */
   ftp_send_response(session, 221, "disconnecting\r\n");
@@ -3759,7 +3759,7 @@ FTP_DECLARE(REST)
   const char *p;
   uint64_t   pos = 0;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3812,7 +3812,7 @@ FTP_DECLARE(REST)
  */
 FTP_DECLARE(RETR)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* open the file to retrieve */
   return ftp_xfer_file(session, args, XFER_FILE_RETR);
@@ -3829,7 +3829,7 @@ FTP_DECLARE(RMD)
 {
   int rc;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3867,7 +3867,7 @@ FTP_DECLARE(RNFR)
 {
   int         rc;
   struct stat st;
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3907,7 +3907,7 @@ FTP_DECLARE(RNTO)
   static char rnfr[XFER_BUFFERSIZE]; // rename-from buffer
   int  rc;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -3943,7 +3943,7 @@ FTP_DECLARE(RNTO)
   
 struct stat attr;
     stat(session->buffer, &attr);
-   console_print(RED "FILE33: %s TIME: %s \n", session->buffer, ctime(&attr.st_mtime));
+   //console_print(RED "FILE33: %s TIME: %s \n", session->buffer, ctime(&attr.st_mtime));
   update_free_space();
   ftp_send_response(session, 250, "OK\r\n");
 }
@@ -3960,7 +3960,7 @@ FTP_DECLARE(SIZE)
   int         rc;
   struct stat st;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -4002,7 +4002,7 @@ FTP_DECLARE(STAT)
   int    minutes = (uptime / 60) % 60;
   int    seconds = uptime % 60;
 
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   if(session->state == DATA_CONNECT_STATE)
   {
@@ -4047,7 +4047,7 @@ FTP_DECLARE(STAT)
  */
 FTP_DECLARE(STOR)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* open the file to store */
   return ftp_xfer_file(session, args, XFER_FILE_STOR);
@@ -4062,7 +4062,7 @@ FTP_DECLARE(STOR)
  */
 FTP_DECLARE(STOU)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   /* we do not support this yet */
   ftp_session_set_state(session, COMMAND_STATE, 0);
@@ -4079,7 +4079,7 @@ FTP_DECLARE(STOU)
  */
 FTP_DECLARE(STRU)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -4102,7 +4102,7 @@ FTP_DECLARE(STRU)
  */
 FTP_DECLARE(SYST)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -4121,7 +4121,7 @@ FTP_DECLARE(SYST)
  */
 FTP_DECLARE(TYPE)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
@@ -4138,7 +4138,7 @@ FTP_DECLARE(TYPE)
  */
 FTP_DECLARE(USER)
 {
-  console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  //console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
 
   ftp_session_set_state(session, COMMAND_STATE, 0);
 
