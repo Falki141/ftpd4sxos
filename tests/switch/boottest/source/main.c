@@ -5,9 +5,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <time.h>
-//#include <switch/services/time.h>
-
 #include <switch.h>
 
 //The SD card is automatically mounted as the default device, usable with standard stdio. SD root dir is located at "/" (also "sdmc:/" but normally using the latter isn't needed).
@@ -18,32 +15,10 @@ int main(int argc, char **argv)
     gfxInitDefault();
     consoleInit(NULL);
 
-    struct stat attrib;
-    
-
-    DIR* dir;
-    struct dirent* ent;
-
-    printf("FALKI TEST SCRIPT...\n");
-    dir = opendir("");//Open current-working-directory.
-    if(dir==NULL)
-    {
-        printf("Failed to open dir.\n");
-    }
-    else
-    {
-        printf("Dir-listing for '':\n");
-        while ((ent = readdir(dir)))
-        {
-            printf("d_name: %s\n", ent->d_name);
-            stat(ent->d_name, &attrib);
-            char time[50];
-            strftime(time, 50, "%Y-%m-%d %H:%M:%S", localtime(&attrib.st_mtime));
-            printf ("FILE: %s TIME: %s\n", ent->d_name, time);
-        }
-        closedir(dir);
-        printf("Done.\n");
-    }
+    printf("FALKI TEST SCRIPT FOR SHUTDOWN AND REBOOT...\n");
+    printf("A    - Restart\n");
+    printf("B    - Shutdown\n");
+    printf("PLUS - Exit\n");
 
     // Main loop
     while(appletMainLoop())
@@ -55,6 +30,16 @@ int main(int argc, char **argv)
         u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
 
         if (kDown & KEY_PLUS) break; // break in order to return to hbmenu
+        if(kDown & KEY_A)
+        {
+            bpcInitialize();
+            bpcRebootSystem();
+        }
+        if(kDown & KEY_B)
+        {
+            bpcInitialize();
+            bpcShutdownSystem();
+        }
 
         gfxFlushBuffers();
         gfxSwapBuffers();
