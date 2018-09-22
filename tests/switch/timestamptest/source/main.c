@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-//#include <switch/services/time.h>
 
 #include <switch.h>
 
