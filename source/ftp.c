@@ -23,10 +23,7 @@
 #include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
-#ifdef _3DS
-#include <3ds.h>
-#define lstat stat
-#elif defined(__SWITCH__)
+#ifdef __SWITCH__
 #include <switch.h>
 #define lstat stat
 #else
@@ -1214,8 +1211,8 @@ ftp_session_new(int listen_fd)
     return;
   }
 
-  console_print(CYAN "accepted connection from %s:%u\n" RESET,
-                inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+  //console_print(CYAN "accepted connection from %s:%u\n" RESET,
+  //              inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
   /* allocate a new session */
   session = (ftp_session_t*)calloc(1, sizeof(ftp_session_t));
@@ -1309,8 +1306,8 @@ ftp_session_accept(ftp_session_t *session)
       return -1;
     }
 
-    console_print(CYAN "accepted connection from %s:%u\n" RESET,
-                  inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+    //console_print(CYAN "accepted connection from %s:%u\n" RESET,
+    //              inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
     /* we are ready to transfer data */
     ftp_session_set_state(session, DATA_TRANSFER_STATE, CLOSE_PASV);
@@ -1864,43 +1861,7 @@ update_status(void)
   return 0;
 }
 
-#ifdef _3DS
-/*! Handle apt events
- *
- *  @param[in] type    Event type
- *  @param[in] closure Callback closure
- */
-static void
-apt_hook(APT_HookType type,
-         void         *closure)
-{
-  switch(type)
-  {
-    case APTHOOK_ONSUSPEND:
-    case APTHOOK_ONSLEEP:
-      /* turn on backlight, or you can't see the home menu! */
-      if(R_SUCCEEDED(gspLcdInit()))
-      {
-        GSPLCD_PowerOnBacklight(GSPLCD_SCREEN_BOTH);
-        gspLcdExit();
-      }
-      break;
-
-    case APTHOOK_ONRESTORE:
-    case APTHOOK_ONWAKEUP:
-      /* restore backlight power state */
-      if(R_SUCCEEDED(gspLcdInit()))
-      {
-        (lcd_power ? GSPLCD_PowerOnBacklight : GSPLCD_PowerOffBacklight)(GSPLCD_SCREEN_BOTH);
-        gspLcdExit();
-      }
-      break;
-
-    default:
-      break;
-  }
-}
-#elif defined(__SWITCH__)
+#ifdef __SWITCH__
 /*! Handle applet events
  *
  *  @param[in] type    Event type
@@ -1929,61 +1890,7 @@ ftp_init(void)
 
   start_time = time(NULL);
 
-#ifdef _3DS
-  Result ret  = 0;
-  u32    wifi = 0;
-  bool   loop;
-
-  /* register apt hook */
-  aptHook(&cookie, apt_hook, NULL);
-
-  console_print(GREEN "Waiting for wifi...\n" RESET);
-
-  /* wait for wifi to be available */
-  while((loop = aptMainLoop()) && !wifi && (ret == 0 || ret == 0xE0A09D2E))
-  {
-    ret = 0;
-
-    hidScanInput();
-    if(hidKeysDown() & KEY_B)
-    {
-      /* user canceled */
-      loop = false;
-      break;
-    }
-
-    /* update the wifi status */
-    ret = ACU_GetWifiStatus(&wifi);
-    if(ret != 0)
-      wifi = 0;
-  }
-
-  /* check if there was a wifi error */
-  if(ret != 0)
-    console_print(RED "ACU_GetWifiStatus returns 0x%lx\n" RESET, ret);
-
-  /* check if we need to exit */
-  if(!loop || ret != 0)
-    return -1;
-
-  console_print(GREEN "Ready!\n" RESET);
-
-  /* allocate buffer for SOC service */
-  SOCU_buffer = (u32*)memalign(SOCU_ALIGN, SOCU_BUFFERSIZE);
-  if(SOCU_buffer == NULL)
-  {
-    console_print(RED "memalign: failed to allocate\n" RESET);
-    goto memalign_fail;
-  }
-
-  /* initialize SOC service */
-  ret = socInit(SOCU_buffer, SOCU_BUFFERSIZE);
-  if(ret != 0)
-  {
-    console_print(RED "socInit: %08X\n" RESET, (unsigned int)ret);
-    goto soc_fail;
-  }
-#elif defined(__SWITCH__)
+#ifdef __SWITCH__
   static const SocketInitConfig socketInitConfig = {
     .bsdsockets_version = 1,
 
@@ -3509,9 +3416,9 @@ FTP_DECLARE(PASV)
   session->pasv_addr.sin_port = htons(next_data_port());
 
 #if defined(_3DS) || defined(__SWITCH__)
-  console_print(YELLOW "binding to %s:%u\n" RESET,
-                inet_ntoa(session->pasv_addr.sin_addr),
-                ntohs(session->pasv_addr.sin_port));
+ // console_print(YELLOW "binding to %s:%u\n" RESET,
+//                inet_ntoa(session->pasv_addr.sin_addr),
+//                ntohs(session->pasv_addr.sin_port));
 #endif
 
   /* bind to the port */
@@ -3555,9 +3462,9 @@ FTP_DECLARE(PASV)
 #endif
 
   /* we are now listening on the socket */
-  console_print(YELLOW "listening on %s:%u\n" RESET,
-                inet_ntoa(session->pasv_addr.sin_addr),
-                ntohs(session->pasv_addr.sin_port));
+ // console_print(YELLOW "listening on %s:%u\n" RESET,
+ //               inet_ntoa(session->pasv_addr.sin_addr),
+  //              ntohs(session->pasv_addr.sin_port));
   session->flags |= SESSION_PASV;
 
   /* print the address in the ftp format */
