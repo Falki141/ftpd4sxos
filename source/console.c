@@ -217,13 +217,13 @@ console_render(void)
   print_tcp_table();
 #endif
   /* flush framebuffer */
-  gfxFlushBuffers();
+
 #ifdef _3DS
   gspWaitForVBlank();
 #endif
-  gfxSwapBuffers();
+
 #if defined(__SWITCH__)
-  gfxWaitForVsync();
+  consoleUpdate(NULL);
 #endif
 }
 

@@ -109,7 +109,7 @@ main(int  argc,
 #elif defined(__SWITCH__)
   //gfxInitResolution(644, 480);
   nifmInitialize();
-  gfxInitDefault();
+  consoleInit(NULL);
 #endif
 
   /* initialize console subsystem */
@@ -177,7 +177,7 @@ log_fail:
   loop(wait_for_b);
 
   /* deinitialize Switch services */
-  gfxExit();
+  consoleExit(NULL);
   nifmExit();
 #endif
   return 0;
