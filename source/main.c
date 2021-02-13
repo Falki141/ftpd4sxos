@@ -108,7 +108,7 @@ main(int  argc,
   /* initialize needed Switch services */
 #elif defined(__SWITCH__)
   //gfxInitResolution(644, 480);
-  nifmInitialize();
+  //nifmInitialize();
   consoleInit(NULL);
 #endif
 
